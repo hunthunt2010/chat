@@ -1,11 +1,16 @@
 package com.example.david.chat;
 
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.View;
@@ -161,6 +166,34 @@ public class MessagingActivity extends ActionBarActivity {
             if (message.getSenderId().equals(recipientId)) {
                 WritableMessage writableMessage = new WritableMessage(message.getRecipientIds().get(0), message.getTextBody());
                 messageAdapter.addMessage(writableMessage, MessageAdapter.DIRECTION_INCOMING);
+
+                NotificationCompat.Builder mBuilder =
+                        new NotificationCompat.Builder(MessagingActivity.this)
+                                .setSmallIcon(R.drawable.ic_launcher)
+                                .setContentTitle("My notification")
+                                .setContentText("Hello World!");
+                // Creates an explicit intent for an Activity in your app
+                Intent resultIntent = new Intent(MessagingActivity.this, MainActivity.class);
+
+// The stack builder object will contain an artificial back stack for the
+// started Activity.
+// This ensures that navigating backward from the Activity leads out of
+// your application to the Home screen.
+                TaskStackBuilder stackBuilder = TaskStackBuilder.create(MessagingActivity.this);
+// Adds the back stack for the Intent (but not the Intent itself)
+                stackBuilder.addParentStack(MainActivity.class);
+// Adds the Intent that starts the Activity to the top of the stack
+                stackBuilder.addNextIntent(resultIntent);
+                PendingIntent resultPendingIntent =
+                        stackBuilder.getPendingIntent(
+                                0,
+                                PendingIntent.FLAG_UPDATE_CURRENT
+                        );
+                mBuilder.setContentIntent(resultPendingIntent);
+                NotificationManager mNotificationManager =
+                        (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+// mId allows you to update the notification later on.
+                mNotificationManager.notify(1, mBuilder.build());
             }
         }
         @Override
@@ -195,7 +228,7 @@ public class MessagingActivity extends ActionBarActivity {
         public void onMessageDelivered(MessageClient client, MessageDeliveryInfo deliveryInfo) {}
         //Don't worry about this right now
         @Override
-        public void onShouldSendPushData(MessageClient client, Message message, List<PushPair> pushPairs) {
+        public void onShouldSendPushData(MessageClient client, final Message message, List<PushPair> pushPairs) {
             //get the id that is registered with Sinch
             final String regId = new String(pushPairs.get(0).getPushData());
             //use an async task to make the http request
@@ -204,7 +237,7 @@ public class MessagingActivity extends ActionBarActivity {
                 protected Void doInBackground(Void... voids) {
                     HttpClient httpclient = new DefaultHttpClient();
                     //url of where your backend is hosted, can't be local!
-                    HttpPost httppost = new HttpPost("https://pacific-island-2683.herokuapp.com?reg_id=" + regId);
+                    HttpPost httppost = new HttpPost(String.format("https://pacific-island-2683.herokuapp.com?reg_id=%s&message=%s", regId, message.getTextBody()));
                     try {
                         HttpResponse response = httpclient.execute(httppost);
                         ResponseHandler<String> handler = new BasicResponseHandler();

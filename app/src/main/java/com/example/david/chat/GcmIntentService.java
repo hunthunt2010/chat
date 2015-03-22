@@ -27,6 +27,7 @@ public class GcmIntentService extends IntentService {
     }
     @Override
     protected void onHandleIntent(Intent intent) {
+        String s = intent.getExtras().getString("score");
         mNotificationManager = (NotificationManager)
                 this.getSystemService(Context.NOTIFICATION_SERVICE);
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
@@ -34,7 +35,7 @@ public class GcmIntentService extends IntentService {
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(this)
                         .setSmallIcon(R.drawable.ic_launcher)
-                        .setContentTitle("New Message!");
+                        .setContentTitle(s);
         mBuilder.setContentIntent(contentIntent);
         mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
         GcmBroadcastReceiver.completeWakefulIntent(intent);
