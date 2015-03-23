@@ -41,6 +41,8 @@ import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.List;
 
@@ -237,7 +239,13 @@ public class MessagingActivity extends ActionBarActivity {
                 protected Void doInBackground(Void... voids) {
                     HttpClient httpclient = new DefaultHttpClient();
                     //url of where your backend is hosted, can't be local!
-                    HttpPost httppost = new HttpPost(String.format("https://pacific-island-2683.herokuapp.com?reg_id=%s&message=%s", regId, message.getTextBody()));
+                    String textBody = message.getTextBody();
+                    try {
+                        textBody = URLEncoder.encode(textBody, "UTF-8");
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
+                    HttpPost httppost = new HttpPost(String.format("https://pacific-island-2683.herokuapp.com?reg_id=%s&message=%s", regId, textBody));
                     try {
                         HttpResponse response = httpclient.execute(httppost);
                         ResponseHandler<String> handler = new BasicResponseHandler();
